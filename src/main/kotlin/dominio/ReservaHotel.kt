@@ -1,6 +1,6 @@
 package dominio
 
-class ReservaHotel (
+class ReservaHotel private constructor(
     descripcion: String,
     val ubicacion: String,
     val numeroNoches: Int
