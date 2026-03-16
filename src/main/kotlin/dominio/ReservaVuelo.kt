@@ -8,12 +8,18 @@ class ReservaVuelo private constructor(
 ) : Reserva(descripcion) {
 
     companion object {
+
+        private val regexHora = Regex("^([01]?\\d|2[0-3]):[0-5]\\d$")
+
         fun creaInstancia(
             descripcion: String,
             origen: String,
             destino: String,
             horaVuelo: String
         ): ReservaVuelo {
+            require(regexHora.matches(horaVuelo)) {
+                "La hora debe tener formato HH:mm"
+            }
             return ReservaVuelo(descripcion, origen, destino, horaVuelo)
         }
     }
