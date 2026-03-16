@@ -16,5 +16,5 @@ abstract class Reserva(val descripcion: String) {
     }
 
     open val detalle: String
-        get() = "$id - $descripcion"
+        get() = "$id + $descripcion"
 }
