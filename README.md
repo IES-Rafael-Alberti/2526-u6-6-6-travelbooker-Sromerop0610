@@ -1126,3 +1126,146 @@ class ReservaVuelo(...) : Reserva(...)
 * Mantienen la estructura común definida en la clase base
 
 ---
+
+## Criterio global 7: Librerías de clases
+
+En este proyecto no se han utilizado **librerías externas**, pero sí se han utilizado **librerías estándar de Kotlin/Java**, concretamente la API de fechas.
+
+---
+
+### 1. Librería utilizada
+
+Se ha utilizado la librería estándar de Java:
+
+```kotlin
+import java.time.LocalDateTime
+```
+
+---
+
+### 2. Motivo de uso
+
+Se eligió `LocalDateTime` para poder:
+
+* Registrar automáticamente la **fecha y hora de creación** de cada reserva
+* Evitar tener que implementar manualmente la gestión de fechas
+
+Es una solución fiable y ya integrada en el lenguaje.
+
+---
+
+### 3. Uso en el proyecto
+
+Se utiliza en la clase `Reserva`:
+
+```kotlin id="e1m7qv"
+val fechaCreacion: LocalDateTime = LocalDateTime.now()
+```
+
+Cada vez que se crea una instancia de `Reserva` (o de sus subclases), se asigna automáticamente la fecha actual.
+
+---
+
+### 4. Cómo se incorporó
+
+No fue necesario añadir dependencias externas, ya que:
+
+* `java.time` forma parte de la biblioteca estándar
+* Solo se necesitó importar la clase con `import`
+
+---
+
+### 5. Funcionalidad añadida
+
+El uso de esta librería permite:
+
+* Asociar una fecha real a cada reserva
+* Mostrar información más completa del objeto
+
+Ejemplo en el método `toString` de `ReservaHotel`:
+
+```kotlin id="d4k9pt"
+Creación: $fechaCreacion
+```
+
+---
+
+## Criterio global 8: Documentado
+
+### 1. Documentación y comentarios en el código
+
+En el proyecto no se ha realizado una documentación extensa con comentarios, pero el código se ha escrito de forma **clara y legible**, utilizando nombres descriptivos en clases, métodos y variables que facilitan su comprensión sin necesidad de muchos comentarios.
+
+Por ejemplo:
+
+```kotlin
+fun crearReservaVuelo(
+    descripcion: String,
+    origen: String,
+    destino: String,
+    hora: String
+)
+```
+
+Los nombres indican claramente qué hace el método y qué representa cada parámetro.
+
+---
+
+Otro ejemplo:
+
+```kotlin
+val fechaCreacion: LocalDateTime = LocalDateTime.now()
+```
+
+El nombre de la variable describe directamente su función.
+
+---
+
+### 2. Herramientas utilizadas
+
+Se ha utilizado **IntelliJ IDEA**, que proporciona:
+
+* Resaltado de sintaxis
+* Autocompletado
+* Estructura visual del código
+
+Esto ayuda a entender el código sin necesidad de documentación externa adicional.
+
+---
+
+### 3. Cómo se asegura la comprensión del código
+
+Para facilitar la comprensión y mantenimiento, se han aplicado varias prácticas:
+
+* **Nombres descriptivos** en clases (`ReservaHotel`, `ReservaVuelo`)
+* Métodos con nombres claros (`crearReservaHotel`, `listarReservas`)
+* Separación en paquetes (`presentacion`, `servicios`, `dominio`, `datos`)
+
+Ejemplo de uso claro:
+
+```kotlin
+val reservas = servicio.listarReservas()
+```
+
+Se entiende directamente qué hace sin necesidad de comentarios.
+
+---
+
+### 4. Valor para mantenimiento y depuración
+
+El código aporta valor para mantenimiento porque:
+
+* Es fácil identificar qué hace cada parte
+* Está organizado por responsabilidades
+* Permite localizar errores rápidamente
+
+Por ejemplo, la validación en:
+
+```kotlin
+require(regexHora.matches(horaVuelo))
+```
+
+facilita detectar errores en la entrada de datos.
+
+---
+
