@@ -1269,3 +1269,151 @@ facilita detectar errores en la entrada de datos.
 
 ---
 
+## Uso de clases con genéricos
+
+### 1. Clase genérica definida
+
+En el proyecto se ha utilizado una **clase genérica** para el repositorio:
+
+```kotlin id="r8s1vw"
+class RepositorioMemoria<T> : IRepositorio<T> {
+
+    private val elementos = mutableListOf<T>()
+
+    override fun agregar(elemento: T) {
+        elementos.add(elemento)
+    }
+
+    override fun obtenerTodos(): List<T> {
+        return elementos
+    }
+}
+```
+
+* `<T>` indica que la clase puede trabajar con **cualquier tipo de objeto**.
+* `IRepositorio<T>` es también genérica, permitiendo implementar el mismo patrón de almacenamiento para diferentes tipos de datos.
+
+---
+
+### 2. Uso de la clase genérica
+
+Se utiliza en el `main` de la aplicación:
+
+```kotlin id="mj2c7p"
+val repositorio = RepositorioMemoria<Reserva>()
+val servicio = ReservaService(repositorio)
+```
+
+Aquí:
+
+* Se especifica que `T` es `Reserva`
+* El repositorio puede almacenar **tanto `ReservaHotel` como `ReservaVuelo`**, gracias al polimorfismo y los genéricos.
+
+---
+
+### 3. Beneficio obtenido
+
+El uso de genéricos aporta varias ventajas:
+
+1. **Reutilización de código**
+
+    * La misma clase `RepositorioMemoria` sirve para cualquier tipo de objeto.
+
+2. **Seguridad de tipos**
+
+    * Se asegura en tiempo de compilación que solo se agregan objetos del tipo correcto.
+
+3. **Flexibilidad**
+
+    * Permite que el repositorio almacene distintas subclases de `Reserva` sin necesidad de crear repositorios específicos para cada una.
+
+---
+
+### 4. Ejemplo de beneficio en acción
+
+Creando reservas de distintos tipos:
+
+```kotlin id="9l5tqw"
+servicio.crearReservaVuelo("Viaje a Madrid", "Cádiz", "Madrid", "14:30")
+servicio.crearReservaHotel("Hotel vacaciones", "Sevilla", 3)
+```
+
+Luego, al listar reservas:
+
+```kotlin id="x4v9nj"
+val reservas = servicio.listarReservas()
+for (reserva in reservas) {
+    println(reserva.detalle)
+}
+```
+
+* Funciona sin problemas para **ambos tipos** (`ReservaVuelo` y `ReservaHotel`) usando un único repositorio genérico.
+
+---
+
+## Criterio global 10: Expresiones Regulares
+
+### 1. Uso de expresiones regulares en el proyecto
+
+Se han utilizado **expresiones regulares** para validar el formato de la hora en las reservas de vuelo (`ReservaVuelo`):
+
+```kotlin id="k9utsl"
+private val regexHora = Regex("^([01]?\\d|2[0-3]):[0-5]\\d$")
+```
+
+* Esta expresión valida que la hora esté en formato **HH:mm**
+* Acepta horas de `00:00` a `23:59`
+
+---
+
+### 2. Aplicación en el código
+
+Se usa dentro del método estático `creaInstancia`:
+
+```kotlin id="v89z0v"
+fun creaInstancia(
+    descripcion: String,
+    origen: String,
+    destino: String,
+    horaVuelo: String
+): ReservaVuelo {
+    require(regexHora.matches(horaVuelo)) {
+        "La hora debe tener formato HH:mm"
+    }
+    return ReservaVuelo(descripcion, origen, destino, horaVuelo)
+}
+```
+
+* `regexHora.matches(horaVuelo)` devuelve `true` si la hora cumple el formato
+* Si no, lanza una excepción y evita crear un objeto con datos inválidos
+
+---
+
+### 3. Beneficios obtenidos
+
+1. **Validación automática de datos**
+
+    * Se asegura que todas las reservas de vuelo tengan una hora válida antes de crear el objeto.
+
+2. **Evitar errores en ejecución**
+
+    * Prevenir entradas incorrectas evita fallos posteriores en la aplicación.
+
+3. **Código más limpio y seguro**
+
+    * La validación se realiza de forma centralizada en el método de creación, sin necesidad de condicionales repetidos en `main` o en `ReservaService`.
+
+---
+
+### 4. Ejemplo de uso práctico
+
+Al crear una reserva:
+
+```kotlin id="mswdek"
+servicio.crearReservaVuelo("Viaje a Madrid", "Cádiz", "Madrid", "14:30") // Correcto
+servicio.crearReservaVuelo("Viaje a Barcelona", "Cádiz", "Barcelona", "25:00") // Lanza excepción
+```
+
+* La primera reserva se crea correctamente
+* La segunda no, porque la hora `25:00` no cumple la expresión regular
+
