@@ -167,3 +167,233 @@ Este conjunto de preguntas está diseñado para ayudarte a reflexionar sobre có
 #### **Criterio global 10: Expresiones Regulares**
 - **(6.g)**: Muestra ejemplos de tu código donde hayas utilizado las expresiones regulares. ¿Qué beneficio has obtenido?
 
+## Entrega de la práctica
+
+
+### 1. Introducción
+
+En esta práctica se ha desarrollado una aplicación en Kotlin para la **gestión de reservas**, concretamente de **vuelos y hoteles**.
+
+El problema que se pretende solucionar es la necesidad de **crear, almacenar y consultar reservas** de distintos tipos de forma estructurada, manteniendo un diseño limpio y escalable.
+
+Para resolverlo, se ha implementado una arquitectura en capas que separa responsabilidades:
+
+* **Presentación**: interacción con el usuario (menú por consola).
+* **Servicios**: lógica de negocio.
+* **Dominio**: definición de las entidades (reservas).
+* **Datos**: almacenamiento (repositorio en memoria).
+
+Este enfoque permite que el sistema sea fácilmente ampliable (por ejemplo, añadiendo nuevos tipos de reservas sin modificar el resto del código).
+
+---
+
+### 2. Estructura de carpetas
+
+El proyecto está organizado en cuatro paquetes principales:
+
+* **presentacion**
+  Contiene el `main`, que gestiona el menú y la interacción con el usuario.
+
+* **servicios**
+  Incluye la clase `ReservaService`, que actúa como intermediaria entre la presentación y el dominio.
+
+* **dominio**
+  Contiene las clases del modelo:
+
+    * `Reserva` (clase abstracta)
+    * `ReservaHotel`
+    * `ReservaVuelo`
+
+* **datos**
+  Define el acceso a datos:
+
+    * `IRepositorio<T>` (interfaz)
+    * `RepositorioMemoria<T>` (implementación en memoria)
+
+---
+
+### 3. Organización y explicación de clases
+
+#### 3.1 Clase abstracta `Reserva`
+
+Es la clase base de todas las reservas:
+
+```kotlin
+abstract class Reserva(val descripcion: String) {
+    val id: Int
+    val fechaCreacion: LocalDateTime = LocalDateTime.now()
+}
+```
+
+* Genera automáticamente un **ID único**.
+* Guarda la **fecha de creación**.
+* Define una propiedad `detalle` que se sobrescribe en las subclases.
+
+---
+
+#### 3.2 Subclases
+
+##### ReservaHotel
+
+```kotlin
+class ReservaHotel private constructor(
+    descripcion: String,
+    val ubicacion: String,
+    val numeroNoches: Int
+) : Reserva(descripcion)
+```
+
+* Representa reservas de hotel.
+* Usa una **factoría (`crearInstancia`)** para controlar la creación.
+
+Ejemplo de detalle:
+
+```kotlin
+"$id + $descripcion -> $ubicacion [$numeroNoches]"
+```
+
+---
+
+##### ReservaVuelo
+
+```kotlin
+class ReservaVuelo private constructor(
+    descripcion: String,
+    val origen: String,
+    val destino: String,
+    val horaVuelo: String
+) : Reserva(descripcion)
+```
+
+* Representa reservas de vuelos.
+* Valida el formato de la hora con una expresión regular:
+
+```kotlin
+require(regexHora.matches(horaVuelo)) {
+    "La hora debe tener formato HH:mm"
+}
+```
+
+---
+
+#### 3.3 Servicio (`ReservaService`)
+
+Gestiona la lógica de negocio:
+
+```kotlin
+fun crearReservaVuelo(...) {
+    val reserva = ReservaVuelo.creaInstancia(...)
+    repositorio.agregar(reserva)
+}
+```
+
+* Se encarga de:
+
+    * Crear objetos del dominio
+    * Guardarlos en el repositorio
+    * Obtener todas las reservas
+
+---
+
+#### 3.4 Repositorio
+
+Interfaz:
+
+```kotlin
+interface IRepositorio<T> {
+    fun agregar(elemento: T)
+    fun obtenerTodos(): List<T>
+}
+```
+
+Implementación en memoria:
+
+```kotlin
+class RepositorioMemoria<T> : IRepositorio<T> {
+    private val elementos = mutableListOf<T>()
+}
+```
+
+* Permite almacenar datos sin depender de base de datos.
+* Facilita cambiar la implementación en el futuro.
+
+---
+
+### 4. Manual de usuario
+
+El programa funciona mediante consola con un menú interactivo:
+
+```
+1. Crear reserva de vuelo
+2. Crear reserva de hotel
+3. Listar reservas
+4. Salir
+```
+
+#### Ejemplo de uso:
+
+* Opción 1 → crear vuelo
+* Opción 2 → crear hotel
+* Opción 3 → mostrar reservas
+
+---
+
+### 5. Ejemplo de funcionamiento
+
+#### Crear reserva de vuelo:
+
+Entrada:
+
+```
+Descripción: Viaje a Madrid
+Origen: Cádiz
+Destino: Madrid
+Hora: 14:30
+```
+
+Se ejecuta:
+
+```kotlin
+servicio.crearReservaVuelo(
+    descripcion,
+    origen,
+    destino,
+    hora
+)
+```
+
+---
+
+#### Listar reservas:
+
+```kotlin
+val reservas = servicio.listarReservas()
+
+for (reserva in reservas) {
+    println(reserva.detalle)
+}
+```
+
+Salida esperada:
+
+```
+1 + Viaje a Madrid + Cádiz -> Madrid [14:30]
+2 + Hotel vacaciones -> Sevilla [3]
+```
+
+---
+
+### 6. Conclusión
+
+Se ha desarrollado una aplicación modular y bien estructurada que permite gestionar reservas de forma sencilla.
+
+El uso de:
+
+* **Herencia (Reserva)**
+* **Patrón repositorio**
+* **Separación en capas**
+
+Permite que el sistema sea **escalable, mantenible y fácil de entender**.
+
+
+##
