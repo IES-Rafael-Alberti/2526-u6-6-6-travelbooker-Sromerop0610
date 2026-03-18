@@ -864,3 +864,265 @@ Gracias a esta estructura:
 * El sistema es más fácil de mantener y ampliar
 
 Por ejemplo, tanto `ReservaHotel` como `ReservaVuelo` pueden almacenarse y mostrarse de la misma forma, ya que ambas son de tipo `Reserva`.
+---
+
+## Criterio global 5: Herencia y uso de clases abstractas e interfaces
+
+### 1. Uso de herencia y clases abstractas
+
+En el proyecto se ha utilizado herencia mediante una clase abstracta `Reserva`, que actúa como base común para los distintos tipos de reservas.
+
+```kotlin id="v5x4n8"
+abstract class Reserva(val descripcion: String) {
+    val id: Int
+    val fechaCreacion: LocalDateTime = LocalDateTime.now()
+
+    open val detalle: String
+        get() = "$id + $descripcion"
+}
+```
+
+A partir de esta clase se han definido subclases:
+
+```kotlin id="nq2b3k"
+class ReservaHotel(...) : Reserva(descripcion)
+```
+
+```kotlin id="k1l9mz"
+class ReservaVuelo(...) : Reserva(descripcion)
+```
+
+**Motivo de este enfoque:**
+
+* Evitar duplicación de código (id, descripción, fecha)
+* Definir una estructura común para todas las reservas
+
+**Beneficio:**
+
+* Permite tratar todos los objetos como `Reserva`, independientemente de su tipo concreto
+
+---
+
+### 2. Uso de interfaces
+
+Se ha definido la interfaz genérica `IRepositorio<T>`:
+
+```kotlin id="z8x3we"
+interface IRepositorio<T> {
+    fun agregar(elemento: T)
+    fun obtenerTodos(): List<T>
+}
+```
+
+Y su implementación:
+
+```kotlin id="u4c7pj"
+class RepositorioMemoria<T> : IRepositorio<T> {
+    private val elementos = mutableListOf<T>()
+}
+```
+
+**Motivo de este enfoque:**
+
+* Separar la definición del repositorio de su implementación
+
+**Beneficio:**
+
+* Permite cambiar la forma de almacenamiento sin afectar al resto del código
+
+---
+
+### 3. Uso en el servicio
+
+El servicio depende de la interfaz, no de la implementación concreta:
+
+```kotlin id="y6t2qb"
+class ReservaService(
+    private val repositorio: IRepositorio<Reserva>
+)
+```
+
+Esto permite trabajar con cualquier tipo de repositorio que implemente la interfaz.
+
+---
+
+### 4. Principios SOLID aplicados
+
+#### a) Principio de responsabilidad única (SRP)
+
+Cada clase tiene una única responsabilidad:
+
+* `Reserva` → representar datos de una reserva
+* `ReservaService` → lógica de negocio
+* `RepositorioMemoria` → almacenamiento
+
+**Beneficio:**
+Código más organizado y fácil de mantener.
+
+---
+
+#### b) Principio abierto/cerrado (OCP)
+
+Las clases están abiertas a extensión pero cerradas a modificación.
+
+Ejemplo:
+
+* Se pueden añadir nuevas clases como `ReservaCoche` sin modificar `Reserva`
+
+```kotlin id="c2m7ax"
+class ReservaCoche(...) : Reserva(descripcion)
+```
+
+**Beneficio:**
+Facilidad para ampliar el sistema sin romper código existente.
+
+---
+
+#### c) Principio de sustitución de Liskov (LSP)
+
+Las subclases pueden sustituir a la clase base:
+
+```kotlin id="v7f9pq"
+val reservas: List<Reserva> = servicio.listarReservas()
+```
+
+Aquí pueden aparecer objetos de tipo:
+
+* `ReservaHotel`
+* `ReservaVuelo`
+
+**Beneficio:**
+Uso uniforme de diferentes tipos de objetos.
+
+---
+
+#### d) Principio de segregación de interfaces (ISP)
+
+La interfaz `IRepositorio` es simple y contiene solo los métodos necesarios:
+
+```kotlin id="p9w3lm"
+fun agregar(elemento: T)
+fun obtenerTodos(): List<T>
+```
+
+**Beneficio:**
+Evita obligar a implementar métodos innecesarios.
+
+---
+
+#### e) Principio de inversión de dependencias (DIP)
+
+El servicio depende de una abstracción:
+
+```kotlin id="q1z8ne"
+private val repositorio: IRepositorio<Reserva>
+```
+
+Y no de una clase concreta.
+
+**Beneficio:**
+Mayor flexibilidad y facilidad para cambiar implementaciones.
+
+---
+
+## Criterio global 6: Diseño de jerarquía de clases
+
+### 1. Jerarquía de clases diseñada
+
+La jerarquía principal del proyecto se basa en la clase abstracta `Reserva`, de la que heredan las clases concretas:
+
+* `Reserva` (clase abstracta)
+
+    * `ReservaHotel`
+    * `ReservaVuelo`
+
+Ejemplo de la clase base:
+
+```kotlin
+abstract class Reserva(val descripcion: String)
+```
+
+Ejemplo de una subclase:
+
+```kotlin
+class ReservaVuelo(...) : Reserva(descripcion)
+```
+
+Esta jerarquía permite representar distintos tipos de reservas que comparten características comunes.
+
+---
+
+### 2. Pruebas y depuración
+
+La jerarquía se ha probado mediante la ejecución del programa desde `main`, creando diferentes tipos de reservas y comprobando su comportamiento.
+
+#### Creación de objetos de distintas subclases
+
+```kotlin
+servicio.crearReservaVuelo(
+    descripcion,
+    origen,
+    destino,
+    hora
+)
+```
+
+```kotlin
+servicio.crearReservaHotel(
+    descripcion,
+    ubicacion,
+    noches
+)
+```
+
+#### Comprobación mediante listado
+
+```kotlin
+val reservas = servicio.listarReservas()
+
+for (reserva in reservas) {
+    println(reserva.detalle)
+}
+```
+
+Con esto se verifica que:
+
+* Ambas subclases se almacenan correctamente como `Reserva`
+* Cada una utiliza su propia implementación de `detalle`
+
+#### Depuración
+
+Se ha comprobado el correcto funcionamiento:
+
+* Verificando que el ID se incrementa correctamente (en `Reserva`)
+* Validando datos en `ReservaVuelo`:
+
+```kotlin
+require(regexHora.matches(horaVuelo))
+```
+
+* Revisando la salida por consola para confirmar que cada tipo muestra su información correctamente
+
+---
+
+### 3. Tipo de herencia utilizada
+
+En el proyecto se ha utilizado principalmente **herencia por especialización**.
+
+* `Reserva` representa un concepto general
+* `ReservaHotel` y `ReservaVuelo` son versiones más específicas
+
+Ejemplo:
+
+```kotlin
+abstract class Reserva(...)
+class ReservaHotel(...) : Reserva(...)
+class ReservaVuelo(...) : Reserva(...)
+```
+
+**Justificación:**
+
+* Cada subclase añade información específica (ubicación, noches, origen, destino, etc.)
+* Mantienen la estructura común definida en la clase base
+
+---
