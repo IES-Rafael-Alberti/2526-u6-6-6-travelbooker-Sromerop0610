@@ -520,3 +520,137 @@ private val elementos = mutableListOf<T>()
 
 Se almacenan en memoria mediante una lista en el repositorio.
 
+### Criterio global 2: Crear y llamar métodos estáticos
+
+#### Métodos y propiedades estáticas definidas
+
+En el proyecto se han definido elementos estáticos mediante `companion object` en varias clases del dominio.
+
+##### 1. Método estático en `ReservaVuelo`
+
+```kotlin
+companion object {
+
+    private val regexHora = Regex("^([01]?\\d|2[0-3]):[0-5]\\d$")
+
+    fun creaInstancia(
+        descripcion: String,
+        origen: String,
+        destino: String,
+        horaVuelo: String
+    ): ReservaVuelo {
+        require(regexHora.matches(horaVuelo)) {
+            "La hora debe tener formato HH:mm"
+        }
+        return ReservaVuelo(descripcion, origen, destino, horaVuelo)
+    }
+}
+```
+
+**Objetivo:**
+
+* Permitir crear objetos validando previamente los datos.
+* Centralizar la lógica de creación en un único punto.
+
+**Por qué es estático:**
+
+* No depende de ningún objeto previo de `ReservaVuelo`.
+* Se necesita llamar antes de que exista la instancia.
+* Permite controlar la creación al tener el constructor como `private`.
+
+---
+
+##### 2. Método estático en `ReservaHotel`
+
+```kotlin
+companion object {
+    fun crearInstancia(
+        descripcion: String,
+        ubicacion: String,
+        numeroNoches: Int
+    ) : ReservaHotel {
+        return ReservaHotel(descripcion, ubicacion, numeroNoches)
+    }
+}
+```
+
+**Objetivo:**
+
+* Crear instancias de la clase de forma controlada.
+
+**Por qué es estático:**
+
+* Igual que en el caso anterior, no depende de una instancia existente.
+* Se utiliza como punto de acceso para crear objetos.
+
+---
+
+##### 3. Propiedad estática en `Reserva`
+
+```kotlin
+companion object {
+    private var contador = 0
+}
+```
+
+**Objetivo:**
+
+* Mantener un contador común para generar identificadores únicos.
+
+**Por qué es estática:**
+
+* El valor debe ser compartido entre todas las instancias.
+* Si no fuera estática, cada objeto tendría su propio contador y no se generarían IDs únicos.
+
+---
+
+#### Uso de métodos y propiedades estáticas
+
+##### 1. Llamada a métodos estáticos
+
+Los métodos estáticos se utilizan desde la clase `ReservaService`.
+
+Ejemplo:
+
+```kotlin
+val reserva = ReservaVuelo.creaInstancia(
+    descripcion,
+    origen,
+    destino,
+    hora
+)
+```
+
+Y:
+
+```kotlin
+val reserva = ReservaHotel.crearInstancia(
+    descripcion,
+    ubicacion,
+    noches
+)
+```
+
+En ambos casos:
+
+* Se llama al método directamente desde la clase
+* No es necesario crear un objeto previo
+
+---
+
+##### 2. Uso de la propiedad estática
+
+La propiedad `contador` se utiliza en el bloque `init` de la clase `Reserva`:
+
+```kotlin
+init {
+    contador += 1
+    id = contador
+}
+```
+
+Aquí:
+
+* Cada vez que se crea una nueva instancia, se incrementa el contador común
+* Se asigna un ID único al objeto
+
