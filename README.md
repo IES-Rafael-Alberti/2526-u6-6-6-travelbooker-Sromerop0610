@@ -396,4 +396,127 @@ El uso de:
 Permite que el sistema sea **escalable, mantenible y fácil de entender**.
 
 
-##
+## RESPUESTA A LAS PREGUNTAS
+### Criterio global 1: Instancia objetos y uso de los mismos
+
+En este proyecto se ha trabajado intensamente con la **instanciación de objetos**, aplicando buenas prácticas como el uso de **constructores privados**, **métodos factoría** y el paso de parámetros entre capas (presentación → servicio → dominio → datos).
+
+---
+
+#### 1. Instanciación de objetos
+
+La creación de objetos no se hace directamente con el constructor, sino mediante **métodos factoría definidos en las clases del dominio**. Esto permite controlar la creación y validar datos.
+
+##### Ejemplo: creación de una reserva de vuelo
+
+```kotlin
+val reserva = ReservaVuelo.creaInstancia(
+    descripcion,
+    origen,
+    destino,
+    hora
+)
+```
+
+En este caso:
+
+* No se usa el constructor directamente (`private constructor`)
+* Se usa el método `creaInstancia`, que valida los datos antes de crear el objeto
+
+```kotlin
+require(regexHora.matches(horaVuelo)) {
+    "La hora debe tener formato HH:mm"
+}
+```
+
+Esto garantiza que todos los objetos creados sean válidos.
+
+---
+
+#### 2. Uso de constructores
+
+Se han utilizado **constructores privados** en las clases del dominio:
+
+```kotlin
+class ReservaVuelo private constructor(...)
+```
+
+Esto obliga a que la creación de objetos pase por la lógica definida en el `companion object`, mejorando el control y la seguridad.
+
+Además, en la clase base `Reserva` se utiliza el constructor para inicializar atributos comunes:
+
+```kotlin
+abstract class Reserva(val descripcion: String)
+```
+
+Y dentro del `init`:
+
+```kotlin
+init {
+    contador += 1
+    id = contador
+}
+```
+
+Aquí se asigna automáticamente un **ID único** a cada objeto instanciado.
+
+---
+
+#### 3. Paso de parámetros entre métodos
+
+El paso de parámetros se realiza en varias capas del sistema:
+
+##### Desde presentación → servicio
+
+En el `main`, el usuario introduce datos que se pasan al servicio:
+
+```kotlin
+servicio.crearReservaVuelo(
+    descripcion,
+    origen,
+    destino,
+    hora
+)
+```
+
+---
+
+##### Desde servicio → dominio
+
+El servicio recibe esos parámetros y los usa para crear el objeto:
+
+```kotlin
+fun crearReservaVuelo(
+    descripcion: String,
+    origen: String,
+    destino: String,
+    hora: String
+)
+```
+
+---
+
+##### Desde servicio → repositorio
+
+Una vez creado el objeto, se pasa como parámetro al repositorio:
+
+```kotlin
+repositorio.agregar(reserva)
+```
+
+Aquí se está utilizando un objeto del tipo `Reserva` ya instanciado.
+
+---
+
+#### 4. Uso de objetos
+
+Los objetos creados se utilizan principalmente para:
+
+##### Almacenamiento
+
+```kotlin
+private val elementos = mutableListOf<T>()
+```
+
+Se almacenan en memoria mediante una lista en el repositorio.
+
