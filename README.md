@@ -653,4 +653,214 @@ Aquí:
 
 * Cada vez que se crea una nueva instancia, se incrementa el contador común
 * Se asigna un ID único al objeto
+---
 
+## Criterio global 3: Uso de entornos
+
+Para el desarrollo del proyecto se ha utilizado el IDE **IntelliJ IDEA**, que ha permitido gestionar todo el ciclo de desarrollo: creación, compilación y pruebas del programa.
+
+---
+
+### 1. Creación del proyecto
+
+El proyecto se creó desde IntelliJ seleccionando un proyecto de **Kotlin/JVM**.
+
+Dentro del IDE se organizaron los paquetes manualmente siguiendo una estructura en capas:
+
+* `presentacion`
+* `servicios`
+* `dominio`
+* `datos`
+
+También se crearon las clases necesarias desde el propio entorno, como por ejemplo:
+
+* `ReservaService`
+* `Reserva`, `ReservaHotel`, `ReservaVuelo`
+* `RepositorioMemoria`
+
+El IDE facilita esto mediante asistentes para crear clases y paquetes automáticamente.
+
+---
+
+### 2. Escritura y edición de código
+
+IntelliJ se ha utilizado para programar el código aprovechando:
+
+* Autocompletado
+* Detección de errores en tiempo real
+* Formateo automático
+
+Por ejemplo, al escribir métodos como:
+
+```kotlin
+fun crearReservaVuelo(...)
+```
+
+el IDE sugiere tipos, parámetros y posibles errores, lo que agiliza el desarrollo.
+
+---
+
+### 3. Compilación y ejecución
+
+La compilación y ejecución del programa se ha realizado directamente desde IntelliJ, ejecutando la clase `main`:
+
+```kotlin
+fun main() {
+    val repositorio = RepositorioMemoria<Reserva>()
+    val servicio = ReservaService(repositorio)
+}
+```
+
+El IDE se encarga automáticamente de:
+
+* Compilar el código
+* Ejecutar el programa en la consola integrada
+
+---
+
+### 4. Pruebas del programa
+
+Las pruebas se han realizado ejecutando el programa y utilizando el menú interactivo:
+
+```text
+1. Crear reserva de vuelo
+2. Crear reserva de hotel
+3. Listar reservas
+4. Salir
+```
+
+Se han probado distintos casos:
+
+* Creación correcta de reservas
+* Validación de la hora en vuelos (formato HH:mm)
+* Visualización de reservas almacenadas
+
+Por ejemplo, al introducir una hora incorrecta, el programa lanza un error debido a:
+
+```kotlin
+require(regexHora.matches(horaVuelo))
+```
+
+---
+
+## Criterio global 4: Definir clases y su contenido
+
+En el proyecto se han definido varias clases para representar el problema de la gestión de reservas. Un ejemplo claro es la jerarquía formada por `Reserva`, `ReservaHotel` y `ReservaVuelo`.
+
+---
+
+### 1. Definición de clases y representación del mundo real
+
+Se identificó la clase `Reserva` como elemento común del dominio, ya que tanto los vuelos como los hoteles comparten características como una **descripción, un identificador y una fecha de creación**.
+
+```kotlin id="q2y5a7"
+abstract class Reserva(val descripcion: String) {
+    val id: Int
+    val fechaCreacion: LocalDateTime = LocalDateTime.now()
+}
+```
+
+Esta clase representa una reserva genérica del mundo real.
+
+A partir de ella se definieron clases más específicas:
+
+* `ReservaHotel` → reservas de alojamiento
+* `ReservaVuelo` → reservas de transporte
+
+---
+
+### 2. Propiedades
+
+Las propiedades se definieron según la información necesaria de cada tipo de reserva.
+
+Ejemplo en `ReservaHotel`:
+
+```kotlin id="2em3t0"
+val ubicacion: String
+val numeroNoches: Int
+```
+
+Ejemplo en `ReservaVuelo`:
+
+```kotlin id="ts6wz8"
+val origen: String
+val destino: String
+val horaVuelo: String
+```
+
+Estas propiedades representan directamente datos del mundo real (lugar, duración, origen, etc.).
+
+---
+
+### 3. Métodos
+
+Se definieron métodos para:
+
+* Crear objetos (`crearInstancia`, `creaInstancia`)
+* Obtener información (`detalle`)
+* Representar el objeto (`toString`)
+
+Ejemplo:
+
+```kotlin id="k6bq6p"
+override val detalle: String
+    get() = "$id + $descripcion + $origen -> $destino [$horaVuelo]"
+```
+
+Este método permite mostrar la información de la reserva de forma clara.
+
+---
+
+### 4. Constructores
+
+Se han utilizado constructores para inicializar los objetos con sus datos:
+
+```kotlin id="f0p7hv"
+class ReservaVuelo private constructor(
+    descripcion: String,
+    val origen: String,
+    val destino: String,
+    val horaVuelo: String
+) : Reserva(descripcion)
+```
+
+Además:
+
+* El constructor es `private` para evitar crear objetos sin control
+* Se fuerza el uso de métodos específicos para la creación
+
+---
+
+### 5. Modificadores de acceso
+
+Se han utilizado modificadores para controlar el acceso:
+
+* `private constructor` → evita instanciación directa
+* `private` en propiedades como el contador → evita acceso externo
+
+Ejemplo:
+
+```kotlin id="hqlgta"
+companion object {
+    private var contador = 0
+}
+```
+
+Esto garantiza que el ID solo se gestione dentro de la clase.
+
+---
+
+### 6. Contribución a la solución del problema
+
+Estas clases permiten:
+
+* Representar correctamente distintos tipos de reservas
+* Organizar la información de forma clara
+* Reutilizar código mediante herencia (`Reserva`)
+
+Gracias a esta estructura:
+
+* Se pueden crear diferentes tipos de reservas sin duplicar lógica
+* El sistema es más fácil de mantener y ampliar
+
+Por ejemplo, tanto `ReservaHotel` como `ReservaVuelo` pueden almacenarse y mostrarse de la misma forma, ya que ambas son de tipo `Reserva`.
